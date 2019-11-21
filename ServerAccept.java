@@ -64,7 +64,7 @@ public class ServerAccept {
          }
          
       } catch(IOException ex) {
-         System.out.println(ex);
+         ex.printStackTrace(System.out);
       }
    }
    
@@ -72,13 +72,25 @@ public class ServerAccept {
    class TCPConnectionHandler extends Thread {
       
       boolean running = true;
+      Socket client;
+      BufferedReader br;
+      PrintWriter pw;
       
-      public TCPConnectionHandler(Socket client) {
-      
+      public TCPConnectionHandler(Socket _client) {
+         client = _client;
       }
       
       public void run() {
+         
+         try {
+            br = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
+         } catch(IOException ex) {
+            ex.printStackTrace(System.out);
+         }
+         
          while(running) {
+            
          }
       }
       
@@ -98,6 +110,7 @@ public class ServerAccept {
       }
       
       public void run() {
+      
          while(running) {
             //listen for client packets
          }
