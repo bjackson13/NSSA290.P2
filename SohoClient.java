@@ -1,3 +1,4 @@
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.net.*;
 import java.io.*;
@@ -10,39 +11,46 @@ public class SohoClient {
         BufferedReader br = null;
         PrintWriter pw = null;
 
-        Btye[] buf = null;
+        byte[] buf = null;
 
         // To get user's choice of tcp/udp and get message
         Scanner scan = new Scanner(System.in);
 
         try {
-            Socket s = new Socket(ip, port);
-            Socket us = new DatagramSocket();
-            br = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            pw = new PrintWriter(new OutputStreamWriter(s.getOutputStream()));
+
 
             InetAddress inet = InetAddress.getLocalHost();
 
             System.out.println("Do you want TCP or UDP?");
             String type = scan.next();
+
+            Date date = new Date(System.currentTimeMillis());
+
             if (type.toLowerCase().equals("tcp")) {
+
+                Socket s = new Socket(ip, port);
+                br = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                pw = new PrintWriter(new OutputStreamWriter(s.getOutputStream()));
 
                 System.out.println("What's your message?");
                 String message = scan.next();
                 // Sends the clients message to the server
-                pw.printlnl(message);
+                pw.println(message);
                 pw.flush();
 
                 // Print-outs for the needed information
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
-                Date date = new Date(System.currentTimeMillis());
                 System.out.println("Connecting to " + ip + "With Ip Address " + inet + "\nUsing TCP on Port " + port
                         + "at " + date);
                 System.out.println(date + "  " + message);
 
                 System.out.println("Server message back: \n" + br.readLine());
 
+                s.close();
+
             } else if (type.toLowerCase().equals("udp")) {
+
+                DatagramSocket us = new DatagramSocket();
 
                 System.out.println("What's your message?");
                 String message = scan.next();
@@ -60,7 +68,7 @@ public class SohoClient {
                 // information that will be
                 // sent from the user
                 dgp = new DatagramPacket(buf, buf.length);
-                us.recieve(dgp);
+                us.receive(dgp);
                 String serversMessage = new String(dgp.getData(), 0, dgp.getLength());
 
             } else {
@@ -69,16 +77,16 @@ public class SohoClient {
 
             br.close();
             pw.close();
-            s.close();
+
 
         } catch (IOException io) {
-
+            io.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
         String ipAddress = args[0];
-        int portNum = args[1];
+        int portNum = Integer.parseInt(args[1]);
         new SohoClient(ipAddress, portNum);
     }
 }
