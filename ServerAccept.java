@@ -46,7 +46,7 @@ public class ServerAccept {
         
          String protocol = isTCP ? "TCP" : "UDP";
          System.out.println("Server Hostname: " + ip.getHostName());
-         System.out.println("Server IP Address: " + ip);
+         System.out.println("Server IP Address: " + ip.getHostAddress());
          System.out.println("Server running "+ protocol +" on Port: " + PORT + " at " + new Timestamp(date.getTime()));
         
          
@@ -157,6 +157,8 @@ public class ServerAccept {
                
                packet = new DatagramPacket(buf, buf.length, packet.getAddress(), packet.getPort());
                
+               System.out.println(packet.getAddress());
+               
                   //print out new client connection address
                   System.out.println(new Timestamp(date.getTime()) + ": New Connection From: " + packet.getAddress().toString());
                   
@@ -166,7 +168,8 @@ public class ServerAccept {
                   
                   //send message back to client
                   buf = clientText.getBytes();
-                  DatagramPacket dgp = new DatagramPacket(buf, buf.length, client.getInetAddress(), client.getPort());
+                  System.out.println("IP Address of packet: " + packet.getAddress());
+                  DatagramPacket dgp = new DatagramPacket(buf, buf.length, packet.getAddress(), client.getLocalPort());
                   client.send(dgp);
                   
                   //if client sends 'end' command
