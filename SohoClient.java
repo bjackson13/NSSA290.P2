@@ -92,7 +92,7 @@ public class SohoClient {
 
     public static void main(String[] args) {
         String ipAddress = args[0];
-        int portNum = args[1];
+        int portNum = Integer.parseInt(args[1]);
         new SohoClient(ipAddress, portNum);
     }
 }
