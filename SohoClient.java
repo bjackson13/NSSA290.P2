@@ -18,8 +18,8 @@ public class SohoClient {
 
         try {
 
-
-            InetAddress inet = InetAddress.getLocalHost();
+            InetAddress inet = InetAddress.getByName(ip);
+            System.out.println(inet);
 
             System.out.println("Do you want TCP or UDP?");
             String type = scan.next();
@@ -32,8 +32,9 @@ public class SohoClient {
                 br = new BufferedReader(new InputStreamReader(s.getInputStream()));
                 pw = new PrintWriter(new OutputStreamWriter(s.getOutputStream()));
 
-                System.out.println("What's your message?");
-                String message = scan.next();
+                System.out.print("What's your message?");
+                scan.nextLine();
+                String message = scan.nextLine();
                 // Sends the clients message to the server
                 pw.println(message);
                 pw.flush();
@@ -53,23 +54,28 @@ public class SohoClient {
                 DatagramSocket us = new DatagramSocket();
 
                 System.out.println("What's your message?");
-                String message = scan.next();
+                scan.nextLine();
+                String message = scan.nextLine();
 
                 buf = message.getBytes();
                 // Sends the datagrampacket to the server and send it using the socket
                 DatagramPacket dgp = new DatagramPacket(buf, buf.length, inet, port);
                 us.send(dgp);
 
-                System.out.println("Connecting to " + ip + "With Ip Address " + inet + "\nUsing UDP on Port " + port
-                        + "at " + date);
-                System.out.println(date + "  " + message);
+                System.out.println("Connecting to " + ip + " With Ip Address " + InetAddress.getLocalHost()
+                        + "\nUsing UDP on Port " + port + "at " + date);
+                System.out.println(date + "\nThe message is: " + message);
 
                 // Reuses the old datagram packet to create a reviceing packet to grab the
                 // information that will be
                 // sent from the user
+
+                buf = new byte[1024];
                 dgp = new DatagramPacket(buf, buf.length);
                 us.receive(dgp);
                 String serversMessage = new String(dgp.getData(), 0, dgp.getLength());
+                System.out.println("Server message back: \n" + serversMessage);
+                us.close();
 
             } else {
                 System.out.println("Invalid input. Restart program.");
@@ -77,7 +83,7 @@ public class SohoClient {
 
             br.close();
             pw.close();
-
+            System.exit(0);
 
         } catch (IOException io) {
             io.printStackTrace();
@@ -86,7 +92,7 @@ public class SohoClient {
 
     public static void main(String[] args) {
         String ipAddress = args[0];
-        int portNum = Integer.parseInt(args[1]);
+        int portNum = args[1];
         new SohoClient(ipAddress, portNum);
     }
 }
