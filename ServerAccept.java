@@ -1,6 +1,8 @@
 import java.net.*;  
 import java.io.*;
 import java.util.Scanner;
+import java.util.Date;
+import java.sql.Timestamp;
 
 /*
    Project 2
@@ -26,6 +28,7 @@ public class ServerAccept {
          ServerSocket tcpSocket = null;
          DatagramSocket udpSocket = null;
          InetAddress ip = InetAddress.getLocalHost();
+         Date date = new Date();
         
         //get UDP or TCP from the user
          do {
@@ -44,7 +47,7 @@ public class ServerAccept {
          String protocol = isTCP ? "TCP" : "UDP";
          System.out.println("Server Hostname: " + ip.getHostName());
          System.out.println("Server IP Address: " + ip);
-         System.out.println("Server running "+ protocol +" on Port: " + PORT);
+         System.out.println("Server running "+ protocol +" on Port: " + PORT + " at " + new Timestamp(date.getTime()));
         
          
          //handle tcp connections
@@ -75,6 +78,8 @@ public class ServerAccept {
       Socket client;
       BufferedReader br;
       PrintWriter pw;
+      //get date for timestamp
+      Date date= new Date();
       
       public TCPConnectionHandler(Socket _client) {
          client = _client;
@@ -84,13 +89,42 @@ public class ServerAccept {
          
          try {
             br = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
+            pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
+            
+            //print out new client connection address
+            System.out.println(new Timestamp(date.getTime()) + ": New Connection From: " + client.getInetAddress().toString());
+         
          } catch(IOException ex) {
             ex.printStackTrace(System.out);
          }
          
+         String clientText = "";
          while(running) {
-            
+            //listen for client packets
+            try {
+               clientText = br.readLine();
+               
+               if(clientText != null) {
+               
+                  //print out client message
+                  System.out.println(new Timestamp(date.getTime()) + ": Client Message Received: " + clientText);
+                  
+                  //send message back to client
+                  pw.println(new Timestamp(date.getTime()).toString() + ": " + clientText);
+                  
+                  //if client sends 'end' command
+                  if(clientText.toLowerCase().equals("end")) { 
+                     kill();
+                     System.out.println(new Timestamp(date.getTime()) + ": Ending connection with: " + client.getInetAddress().toString());
+                     return;
+                  }
+               }
+               
+            } catch(IOException ex) {
+               ex.printStackTrace(System.out);
+            } catch(NullPointerException ex) {
+               ex.printStackTrace(System.out);
+            }
          }
       }
       
@@ -104,15 +138,49 @@ public class ServerAccept {
    class UDPConnectionHandler extends Thread {
       
       boolean running = true;
+      DatagramSocket client;
+      //get date for timestamp
+      Date date= new Date();
+      byte[] buf = new byte[1024];
+      DatagramPacket packet = new DatagramPacket(buf, buf.length);
       
       public UDPConnectionHandler(DatagramSocket udpSocket) {
-      
+         client = udpSocket;
       }
       
       public void run() {
-      
+         
          while(running) {
             //listen for client packets
+            try {
+               client.receive(packet);
+               
+               packet = new DatagramPacket(buf, buf.length, packet.getAddress(), packet.getPort());
+               
+                  //print out new client connection address
+                  System.out.println(new Timestamp(date.getTime()) + ": New Connection From: " + packet.getAddress().toString());
+                  
+                  //print out client message
+                  String clientText = new String(packet.getData(), 0, packet.getLength());
+                  System.out.println(new Timestamp(date.getTime()) + ": Client Message Received: " + clientText);
+                  
+                  //send message back to client
+                  buf = clientText.getBytes();
+                  DatagramPacket dgp = new DatagramPacket(buf, buf.length, client.getInetAddress(), client.getPort());
+                  client.send(dgp);
+                  
+                  //if client sends 'end' command
+                  if(clientText.toLowerCase().equals("end")) { 
+                     kill();
+                     System.out.println(new Timestamp(date.getTime()) + ": Ending connection with: " + client.getInetAddress().toString());
+                     return;
+                  }
+               
+            } catch(IOException ex) {
+               ex.printStackTrace(System.out);
+            } catch(NullPointerException ex) {
+               ex.printStackTrace(System.out);
+            }
          }
       }
       
